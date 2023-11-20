@@ -12,7 +12,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("LOGIN PAGE"),),
-      body: Container(foregroundDecoration: BoxDecoration(color: Colors.lightBlue),)
+      body: Container(foregroundDecoration: BoxDecoration(color: Color.fromRGBO(51, 244, 3, 1)),)
     );
   }
 }
