@@ -1,10 +1,11 @@
+// home_page.dart
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:proyecto_final/fire_functions.dart';
 import '../models/evento_model.dart';
 import '../widgets/widgets_ui.dart';
-
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -41,7 +42,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(15.0),
         decoration: const BoxDecoration(
           color: Color(0xff4ECDC4),
         ),

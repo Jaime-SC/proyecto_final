@@ -1,3 +1,5 @@
+// fire_functions.dart
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -26,13 +28,12 @@ class FirebaseService {
       // Devuelve un valor String o null al final de la función
       return "Usuario autenticado"; // Puedes cambiar esto según tus necesidades
     } on FirebaseAuthException catch (e) {
-      
       print(e.message);
       throw e;
     }
   }
 
-  Future<void> signOutFromGoogle() async {
+  static Future<void> signOutFromGoogle() async {
     await _googleSignIn.signOut();
     await _auth.signOut();
   }

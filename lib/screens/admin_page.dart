@@ -2,8 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:datetime_picker_formfield_new/datetime_picker_formfield.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-// Importa el modelo Evento
 import '../fire_functions.dart';
 import '../models/evento_model.dart';
 import '../widgets/widgets_ui.dart';
@@ -33,7 +31,6 @@ class _AdminPageState extends State<AdminPage> {
     super.initState();
     _loadEventTypes();
     _eventosStream = _getEventosStream();
-    
   }
 
   Future<void> _loadEventTypes() async {
@@ -85,9 +82,16 @@ class _AdminPageState extends State<AdminPage> {
         _eventType = '';
         _eventLikes = 0;
       });
-      Navigator.pop(
-          context); // Cerrar la pestaña flotante después de agregar el evento
+      Navigator.pop(context);
     }
+  }
+
+  Future<void> _signOut() async {
+    await FirebaseService.signOutFromGoogle();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const HomePage()),
+    );
   }
 
   @override
@@ -97,47 +101,40 @@ class _AdminPageState extends State<AdminPage> {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            
             const Text('Admin Page'),
             ElevatedButton(
-              onPressed: () {
-                // Llama al método de cierre de sesión en tu servicio de Firebase
-                FirebaseService().signOutFromGoogle();
-                // Navega de nuevo a la página de inicio de sesión después de cerrar sesión
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HomePage()),
-                );
-              },
+              onPressed: _signOut,
               child: const Text('Cerrar Sesión'),
             ),
           ],
         ),
       ),
-      body: StreamBuilder<List<Evento>>(
-        stream: _eventosStream,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return const Center(child: Text('Error al cargar eventos'));
-          }
+      body: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: StreamBuilder<List<Evento>>(
+          stream: _eventosStream,
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return const Center(child: Text('Error al cargar eventos'));
+            }
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          final eventos = snapshot.data ?? [];
+            final eventos = snapshot.data ?? [];
 
-          return ListView.builder(
-            itemCount: eventos.length,
-            itemBuilder: (context, index) {
-              return CardEvento(evento: eventos[index]);
-            },
-          );
-        },
+            return ListView.builder(
+              itemCount: eventos.length,
+              itemBuilder: (context, index) {
+                return CardEvento(evento: eventos[index]);
+              },
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Mostrar la pestaña flotante para agregar evento
           showDialog(
             context: context,
             builder: (BuildContext context) {
@@ -160,8 +157,7 @@ class _AdminPageState extends State<AdminPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
-                decoration:
-                    const InputDecoration(labelText: 'Nombre del evento'),
+                decoration: const InputDecoration(labelText: 'Nombre del evento'),
                 onChanged: (value) => _eventName = value,
                 keyboardType: TextInputType.text,
                 validator: (value) {
@@ -244,8 +240,7 @@ class _AdminPageState extends State<AdminPage> {
                   }
                   return null;
                 },
-                items:
-                    _eventTypes.map<DropdownMenuItem<String>>((String value) {
+                items: _eventTypes.map<DropdownMenuItem<String>>((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
                     child: Text(value),
@@ -258,8 +253,7 @@ class _AdminPageState extends State<AdminPage> {
                 children: [
                   TextButton(
                     onPressed: () {
-                      Navigator.pop(
-                          context); // Cerrar la pestaña flotante sin agregar evento
+                      Navigator.pop(context);
                     },
                     child: const Text('Cancelar'),
                   ),
