@@ -1,4 +1,3 @@
-// evento_model.dart
 class Evento {
   final String id;
   final String nombre;
@@ -7,6 +6,7 @@ class Evento {
   final DateTime fecha;
   final String tipo;
   final bool finalizado; // Nuevo campo
+  final int like; // Nuevo campo
 
   Evento({
     required this.id,
@@ -16,5 +16,6 @@ class Evento {
     required this.fecha,
     required this.tipo,
     this.finalizado = false, // Valor predeterminado
+    this.like = 0, // Valor predeterminado para los likes
   });
 }

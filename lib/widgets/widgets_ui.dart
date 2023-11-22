@@ -1,10 +1,6 @@
-// widgets_ui.dart
-
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
 import '../models/evento_model.dart';
-
-// Archivo: widgets_ui.dart
 
 class CardEvento extends StatelessWidget {
   final Evento evento;
@@ -100,17 +96,18 @@ class TextFieldLogin extends StatelessWidget {
   }
 }
 
-// widgets_ui.dart
 class CardEventoAdmin extends StatelessWidget {
   final Evento evento;
   final VoidCallback onDelete;
-  final VoidCallback onToggleState; // Add this line
+  final VoidCallback onToggleState;
+  final VoidCallback onEdit; // Agrega esta línea
 
   const CardEventoAdmin({
     Key? key,
     required this.evento,
     required this.onDelete,
-    required this.onToggleState, // Add this line
+    required this.onToggleState,
+    required this.onEdit, // Agrega esta línea
   }) : super(key: key);
 
   @override
@@ -122,12 +119,33 @@ class CardEventoAdmin extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              evento.nombre,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18.0,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      evento.nombre,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18.0,
+                      ),
+                    ),
+                    Text(
+                      'Estado: ${evento.finalizado ? "Finalizado" : "En curso"}',
+                      style: TextStyle(
+                        color: evento.finalizado ? Colors.red : Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                ElevatedButton(
+                  onPressed: onToggleState,
+                  child: const Icon(HeroIcons.arrow_path),
+                ),
+              ],
             ),
             const SizedBox(height: 8.0),
             Text(
@@ -140,37 +158,27 @@ class CardEventoAdmin extends StatelessWidget {
               style: const TextStyle(fontSize: 14.0),
             ),
             const SizedBox(height: 8.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    // Funcionalidad para indicar que me gusta un evento
-                    // Puedes implementar esta función según tus necesidades
-                    // Ejemplo: FirebaseService.indicarMeGusta(evento);
-                  },
-                  child: const Icon(HeroIcons.heart),
-                ),
-                ElevatedButton(
-                  onPressed: onDelete,
-                  child: const Icon(HeroIcons.trash),
-                ),
-              ],
+            Text(
+              'Lugar: ${evento.lugar}',
+              style: const TextStyle(fontSize: 14.0),
+            ),
+            const SizedBox(height: 8.0),
+            Text(
+              'Tipo: ${evento.tipo}',
+              style: const TextStyle(fontSize: 14.0),
             ),
             const SizedBox(height: 8.0),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Estado: ${evento.finalizado ? "Finalizado" : "En curso"}',
-                  style: TextStyle(
-                    color: evento.finalizado ? Colors.red : Colors.green,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
                 ElevatedButton(
-                  onPressed: onToggleState, // Use onToggleState here
-                  child: const Icon(HeroIcons.arrow_path),
+                  onPressed: onDelete,
+                  child: const Icon(HeroIcons.trash),
+                ),
+                const SizedBox(height: 8.0),
+                ElevatedButton(
+                  onPressed: onEdit, // Usa onEdit aquí
+                  child: const Icon(HeroIcons.pencil),
                 ),
               ],
             ),
@@ -194,14 +202,9 @@ class CardEventoHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ExpansionTile(
-      backgroundColor: Color(0xffC9DEF4),     
+      backgroundColor: Color(0xffC9DEF4),
       collapsedBackgroundColor: Color(0xffF5CCD4),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      
-      
-      
-      
-
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -266,4 +269,3 @@ class CardEventoHome extends StatelessWidget {
     );
   }
 }
-

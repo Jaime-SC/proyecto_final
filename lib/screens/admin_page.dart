@@ -1,9 +1,11 @@
+// DALE AL FUNCION DE PODER EDITAR EL CONTENIDO DEL EVENTO
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:datetime_picker_formfield_new/datetime_picker_formfield.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../fire_functions.dart';
 import '../models/evento_model.dart';
+import '../services/firebase_service.dart';
 import '../widgets/widgets_ui.dart';
 import 'home_page.dart';
 
@@ -19,7 +21,7 @@ class _AdminPageState extends State<AdminPage> {
   final _formKey = GlobalKey<FormState>();
   String _eventName = '';
   DateTime _eventDateTime = DateTime.now();
-  
+
   String _eventDescription = '';
   String _eventLugar = '';
   String _eventType = '';
@@ -45,6 +47,16 @@ class _AdminPageState extends State<AdminPage> {
     } catch (e) {
       print('Error al cargar tipos de eventos: $e');
     }
+  }
+
+  Future<void> _editEvento(Evento evento) async {
+    // Muestra un cuadro de diálogo para editar la información del evento
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return _buildEditEventDialog(evento);
+      },
+    );
   }
 
   Future<void> _deleteEvento(String eventoId) async {
@@ -95,7 +107,7 @@ class _AdminPageState extends State<AdminPage> {
       await db.collection('eventos').add({
         'nombre': _eventName,
         'fecha_hora': _eventDateTime,
-        
+
         'descripcion': _eventDescription,
         'lugar': _eventLugar,
         'tipo': _eventType,
@@ -108,7 +120,7 @@ class _AdminPageState extends State<AdminPage> {
       setState(() {
         _eventName = '';
         _eventDateTime = DateTime.now();
-        
+
         _eventDescription = '';
         _eventLugar = '';
         _eventType = '';
@@ -123,6 +135,172 @@ class _AdminPageState extends State<AdminPage> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const HomePage()),
+    );
+  }
+
+  Widget _buildEditEventDialog(Evento evento) {
+    final TextEditingController nombreController = TextEditingController();
+    final TextEditingController descripcionController = TextEditingController();
+    final TextEditingController lugarController = TextEditingController();
+    final TextEditingController fechaController = TextEditingController();
+    final TextEditingController tipoController = TextEditingController();
+
+    // Llena los controladores con la información actual del evento
+    nombreController.text = evento.nombre;
+    descripcionController.text = evento.descripcion;
+    lugarController.text = evento.lugar;
+    fechaController.text = DateFormat('yyyy-MM-dd HH:mm').format(evento.fecha);
+    tipoController.text = evento.tipo;
+
+    return Dialog(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nombreController,
+                decoration:
+                    const InputDecoration(labelText: 'Nombre del evento'),
+                keyboardType: TextInputType.text,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, ingrese un nombre';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 8.0),
+              TextFormField(
+                controller: descripcionController,
+                decoration: const InputDecoration(labelText: 'Descripción'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, ingrese una descripción';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 8.0),
+              TextFormField(
+                controller: lugarController,
+                decoration: const InputDecoration(labelText: 'Lugar'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, ingrese un lugar';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 8.0),
+              DateTimeField(
+                controller: fechaController,
+                decoration: const InputDecoration(labelText: 'Fecha y hora'),
+                format: DateFormat('yyyy-MM-dd HH:mm'),
+                onShowPicker: (context, currentValue) async {
+                  return await showDatePicker(
+                    context: context,
+                    firstDate: DateTime.now(),
+                    initialDate: currentValue ?? DateTime.now(),
+                    lastDate: DateTime(2100),
+                  ).then((selectedDate) async {
+                    if (selectedDate != null) {
+                      return await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay.fromDateTime(
+                            currentValue ?? DateTime.now()),
+                      ).then((selectedTime) {
+                        if (selectedTime != null) {
+                          return DateTimeField.combine(
+                            selectedDate,
+                            selectedTime,
+                          );
+                        } else {
+                          return currentValue;
+                        }
+                      });
+                    } else {
+                      return currentValue;
+                    }
+                  });
+                },
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _eventDateTime = value;
+                    });
+                  }
+                },
+                validator: (value) {
+                  if (value == null) {
+                    return 'Por favor, ingrese una fecha y hora';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 8.0),
+              DropdownButtonFormField<String>(
+                value: tipoController.text,
+                items: _eventTypes.toSet().toList().map((tipo) {
+                  return DropdownMenuItem<String>(
+                    value: tipo,
+                    child: Text(tipo),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    tipoController.text = value!;
+                  });
+                },
+                decoration: const InputDecoration(labelText: 'Tipo de evento'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, seleccione un tipo de evento';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Cancelar'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (_formKey.currentState!.validate()) {
+                        // Realiza la lógica para actualizar la información en Firestore
+                        await db.collection('eventos').doc(evento.id).update({
+                          'nombre': nombreController.text,
+                          'descripcion': descripcionController.text,
+                          'lugar': lugarController.text,
+                          'fecha_hora': DateTime.parse(fechaController.text),
+                          'tipo': tipoController.text,
+                        });
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Evento actualizado con éxito')),
+                        );
+
+                        // Cierra el cuadro de diálogo después de la edición
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: const Text('Guardar Cambios'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -164,6 +342,8 @@ class _AdminPageState extends State<AdminPage> {
                   onDelete: () => _deleteEvento(eventos[index].id),
                   onToggleState: () => _toggleEventoState(
                       eventos[index].id, eventos[index].finalizado),
+                  onEdit: () =>
+                      _editEvento(eventos[index]), // Agrega esta línea
                 );
               },
             );
