@@ -1,7 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:proyecto_final/fire_functions.dart';
+import '../models/evento_model.dart';
 import '../widgets/widgets_ui.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -11,15 +14,28 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late TextEditingController emailController, passwordController;
+  late Stream<List<Evento>> _eventosStream;
 
-  // Lista de eventos de ejemplo
-  List<Evento> eventos = [
-    Evento('Evento 1', 'Descripción del Evento 1', DateTime.now().add(const Duration(days: 2))),
-    Evento('Evento 2', 'Descripción del Evento 2', DateTime.now().subtract(const Duration(days: 1))),
-    Evento('Evento 3', 'Descripción del Evento 1', DateTime.now().add(const Duration(days: 2))),
-    // Puedes agregar más eventos según tus necesidades
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _eventosStream = _getEventosStream();
+  }
+
+  Stream<List<Evento>> _getEventosStream() {
+    return FirebaseFirestore.instance.collection('eventos').snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return Evento(
+          id: doc.id,
+          nombre: data['nombre'] ?? '',
+          descripcion: data['descripcion'] ?? '',
+          fecha: (data['fecha_hora'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          tipo: data['tipo'] ?? '',
+        );
+      }).toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +48,6 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Mostrar la lista de eventos
             Padding(
               padding: const EdgeInsets.only(top: 35),
               child: ElevatedButton(
@@ -59,10 +74,25 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             Expanded(
-              child: ListView.builder(
-                itemCount: eventos.length,
-                itemBuilder: (context, index) {
-                  return CardEvento(evento: eventos[index]);
+              child: StreamBuilder<List<Evento>>(
+                stream: _eventosStream,
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return const Center(child: Text('Error al cargar eventos'));
+                  }
+
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final eventos = snapshot.data ?? [];
+
+                  return ListView.builder(
+                    itemCount: eventos.length,
+                    itemBuilder: (context, index) {
+                      return CardEvento(evento: eventos[index]);
+                    },
+                  );
                 },
               ),
             ),
@@ -71,13 +101,4 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-}
-
-// Clase de modelo para representar un evento
-class Evento {
-  final String nombre;
-  final String descripcion;
-  final DateTime fecha;
-
-  Evento(this.nombre, this.descripcion, this.fecha);
 }

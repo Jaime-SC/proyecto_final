@@ -26,6 +26,7 @@ class FirebaseService {
       // Devuelve un valor String o null al final de la función
       return "Usuario autenticado"; // Puedes cambiar esto según tus necesidades
     } on FirebaseAuthException catch (e) {
+      
       print(e.message);
       throw e;
     }
