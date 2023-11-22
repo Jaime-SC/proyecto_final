@@ -19,8 +19,9 @@ class _AdminPageState extends State<AdminPage> {
   final _formKey = GlobalKey<FormState>();
   String _eventName = '';
   DateTime _eventDateTime = DateTime.now();
-  String _eventLocation = '';
+  
   String _eventDescription = '';
+  String _eventLugar = '';
   String _eventType = '';
   int _eventLikes = 0;
   List<String> _eventTypes = [];
@@ -46,6 +47,32 @@ class _AdminPageState extends State<AdminPage> {
     }
   }
 
+  Future<void> _deleteEvento(String eventoId) async {
+    try {
+      await db.collection('eventos').doc(eventoId).delete();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Evento eliminado con éxito')),
+      );
+    } catch (e) {
+      print('Error al eliminar el evento: $e');
+    }
+  }
+
+  Future<void> _toggleEventoState(String eventoId, bool currentState) async {
+    try {
+      await db.collection('eventos').doc(eventoId).update({
+        'finalizado': !currentState, // Cambia el estado opuesto al actual
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Estado del evento actualizado')),
+      );
+      // Añade la siguiente línea para actualizar la lista de eventos en HomePage
+      _eventosStream = _getEventosStream(); // Reasigna el stream
+    } catch (e) {
+      print('Error al cambiar el estado del evento: $e');
+    }
+  }
+
   Stream<List<Evento>> _getEventosStream() {
     return db.collection('eventos').snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
@@ -54,8 +81,10 @@ class _AdminPageState extends State<AdminPage> {
           id: doc.id,
           nombre: data['nombre'] ?? '',
           descripcion: data['descripcion'] ?? '',
+          lugar: data['lugar'] ?? '',
           fecha: (data['fecha_hora'] as Timestamp?)?.toDate() ?? DateTime.now(),
           tipo: data['tipo'] ?? '',
+          finalizado: data['finalizado'] ?? false, // Agrega 'finalizado'
         );
       }).toList();
     });
@@ -66,10 +95,12 @@ class _AdminPageState extends State<AdminPage> {
       await db.collection('eventos').add({
         'nombre': _eventName,
         'fecha_hora': _eventDateTime,
-        'lugar': _eventLocation,
+        
         'descripcion': _eventDescription,
+        'lugar': _eventLugar,
         'tipo': _eventType,
         'like': _eventLikes,
+        'finalizado': false, // Set the default value to false
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Evento creado con éxito')),
@@ -77,8 +108,9 @@ class _AdminPageState extends State<AdminPage> {
       setState(() {
         _eventName = '';
         _eventDateTime = DateTime.now();
-        _eventLocation = '';
+        
         _eventDescription = '';
+        _eventLugar = '';
         _eventType = '';
         _eventLikes = 0;
       });
@@ -127,7 +159,12 @@ class _AdminPageState extends State<AdminPage> {
             return ListView.builder(
               itemCount: eventos.length,
               itemBuilder: (context, index) {
-                return CardEvento(evento: eventos[index]);
+                return CardEventoAdmin(
+                  evento: eventos[index],
+                  onDelete: () => _deleteEvento(eventos[index].id),
+                  onToggleState: () => _toggleEventoState(
+                      eventos[index].id, eventos[index].finalizado),
+                );
               },
             );
           },
@@ -157,7 +194,8 @@ class _AdminPageState extends State<AdminPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Nombre del evento'),
+                decoration:
+                    const InputDecoration(labelText: 'Nombre del evento'),
                 onChanged: (value) => _eventName = value,
                 keyboardType: TextInputType.text,
                 validator: (value) {
@@ -213,7 +251,7 @@ class _AdminPageState extends State<AdminPage> {
               ),
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Lugar'),
-                onChanged: (value) => _eventLocation = value,
+                onChanged: (value) => _eventLugar = value,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor, ingrese un lugar';
@@ -240,7 +278,8 @@ class _AdminPageState extends State<AdminPage> {
                   }
                   return null;
                 },
-                items: _eventTypes.map<DropdownMenuItem<String>>((String value) {
+                items:
+                    _eventTypes.map<DropdownMenuItem<String>>((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
                     child: Text(value),

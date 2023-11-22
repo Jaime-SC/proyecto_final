@@ -15,6 +15,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final db = FirebaseFirestore.instance;
   late Stream<List<Evento>> _eventosStream;
 
   @override
@@ -24,27 +25,46 @@ class _HomePageState extends State<HomePage> {
   }
 
   Stream<List<Evento>> _getEventosStream() {
-    return FirebaseFirestore.instance.collection('eventos').snapshots().map((snapshot) {
+    return FirebaseFirestore.instance
+        .collection('eventos')
+        .snapshots()
+        .map((snapshot) {
       return snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return Evento(
           id: doc.id,
           nombre: data['nombre'] ?? '',
           descripcion: data['descripcion'] ?? '',
+          lugar: data['lugar'] ?? '',
           fecha: (data['fecha_hora'] as Timestamp?)?.toDate() ?? DateTime.now(),
           tipo: data['tipo'] ?? '',
+          finalizado: data['finalizado'] ?? false, // Agrega 'finalizado'
         );
       }).toList();
     });
   }
 
+ Future<void> _toggleEventoState(String eventoId, bool currentState) async {
+    try {
+      await db.collection('eventos').doc(eventoId).update({
+        'finalizado': !currentState, // Cambia el estado opuesto al actual
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Estado del evento actualizado')),
+      );
+      // Añade la siguiente línea para actualizar la lista de eventos en HomePage
+      _eventosStream = _getEventosStream(); // Reasigna el stream
+    } catch (e) {
+      print('Error al cambiar el estado del evento: $e');
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         padding: const EdgeInsets.all(15.0),
         decoration: const BoxDecoration(
-          color: Color(0xff4ECDC4),
+          color: Color(0xffB8A4C9),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -53,7 +73,8 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.only(top: 35),
               child: ElevatedButton(
                 style: ButtonStyle(
-                  backgroundColor: MaterialStatePropertyAll(const Color(0xffF7FFF7)),
+                  backgroundColor:
+                      MaterialStatePropertyAll(const Color(0xffF7FFF7)),
                 ),
                 onPressed: () {
                   FirebaseService.signInWithGoogle(context);
@@ -91,7 +112,11 @@ class _HomePageState extends State<HomePage> {
                   return ListView.builder(
                     itemCount: eventos.length,
                     itemBuilder: (context, index) {
-                      return CardEvento(evento: eventos[index]);
+                      return CardEventoHome(
+                        evento: eventos[index],                        
+                        onToggleState: () => _toggleEventoState(
+                            eventos[index].id, eventos[index].finalizado),
+                      );
                     },
                   );
                 },
