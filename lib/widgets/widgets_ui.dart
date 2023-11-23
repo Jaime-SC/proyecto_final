@@ -115,8 +115,8 @@ class CardEventoHome extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(10),
           child: ExpansionTile(
-            backgroundColor: Color(0xffC9DEF4),
-            collapsedBackgroundColor: Color(0xffF5CCD4),
+            backgroundColor: Color(0xffFDFFFC),
+            collapsedBackgroundColor: Color(0xffB6F7EE),
             shape: InputBorder.none,
             title: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -132,9 +132,11 @@ class CardEventoHome extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Estado: ${evento.finalizado ? "Finalizado" : "En curso"}',
+                      'Estado: ${evento.finalizado ? "Finalizado" : "Activo"}',
                       style: TextStyle(
-                        color: evento.finalizado ? Colors.red : Colors.green,
+                        color: evento.finalizado
+                            ? Color(0xffFF0000)
+                            : Color(0xff00CC00),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -145,17 +147,16 @@ class CardEventoHome extends StatelessWidget {
                     onToggleState();
                   },
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xffF71735),
                     elevation: 4, // Ajusta el valor según sea necesario
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.favorite),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 5),
-                        child: Text(
-                          '${evento.like}',
-                          style: const TextStyle(fontSize: 14.0),
-                        ),
+                      const Icon(BoxIcons.bxs_heart, color: Color(0xffFDFFFC)),
+                      SizedBox(width: 8.0),
+                      Text(
+                        '${evento.like}',
+                        style: const TextStyle(fontSize: 14.0, color: Color(0xffFDFFFC)),
                       ),
                     ],
                   ),

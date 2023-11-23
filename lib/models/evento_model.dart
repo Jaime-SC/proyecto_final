@@ -6,8 +6,8 @@ class Evento {
   final DateTime fecha;
   final String tipo;
   final bool finalizado;
-  final int like;
-  final List<String> likes; // Nuevo campo
+  late final int like;
+  final Set<String> usuariosLiked; // Nuevo campo
 
   Evento({
     required this.id,
@@ -18,6 +18,6 @@ class Evento {
     required this.tipo,
     this.finalizado = false,
     this.like = 0,
-    this.likes = const [], // Valor predeterminado
-  });
+    Set<String>? usuariosLiked, // Nuevo parámetro opcional
+  }) : usuariosLiked = usuariosLiked ?? {}; // Inicializa el conjunto si es nulo
 }

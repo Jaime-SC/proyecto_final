@@ -153,6 +153,7 @@ class _AdminPageState extends State<AdminPage> {
     return Dialog(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
+
         child: Form(
           key: _formKey,
           child: Column(
@@ -306,6 +307,8 @@ class _AdminPageState extends State<AdminPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Color(0xffF71735),
+        foregroundColor: Color(0xffFDFFFC),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -317,35 +320,39 @@ class _AdminPageState extends State<AdminPage> {
           ],
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(15.0),
-        child: StreamBuilder<List<Evento>>(
-          stream: _eventosStream,
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return const Center(child: Text('Error al cargar eventos'));
-            }
-
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            final eventos = snapshot.data ?? [];
-
-            return ListView.builder(
-              itemCount: eventos.length,
-              itemBuilder: (context, index) {
-                return CardEventoAdmin(
-                  evento: eventos[index],
-                  onDelete: () => _deleteEvento(eventos[index].id),
-                  onToggleState: () => _toggleEventoState(
-                      eventos[index].id, eventos[index].finalizado),
-                  onEdit: () =>
-                      _editEvento(eventos[index]), // Agrega esta línea
-                );
-              },
-            );
-          },
+      body: Container(
+        color: Color(0xff011627),
+        child: Padding(
+          
+          padding: const EdgeInsets.all(15.0),
+          child: StreamBuilder<List<Evento>>(
+            stream: _eventosStream,
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return const Center(child: Text('Error al cargar eventos'));
+              }
+      
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+      
+              final eventos = snapshot.data ?? [];
+      
+              return ListView.builder(
+                itemCount: eventos.length,
+                itemBuilder: (context, index) {
+                  return CardEventoAdmin(
+                    evento: eventos[index],
+                    onDelete: () => _deleteEvento(eventos[index].id),
+                    onToggleState: () => _toggleEventoState(
+                        eventos[index].id, eventos[index].finalizado),
+                    onEdit: () =>
+                        _editEvento(eventos[index]), // Agrega esta línea
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(

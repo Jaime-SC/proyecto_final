@@ -19,6 +19,7 @@ class _HomePageState extends State<HomePage> {
       true; // Nuevo: Variable para alternar entre eventos futuros y pasados
   bool showUpcomingEventsOnly = false;
   bool isUpdating = false;
+  List<bool> isSelected = [true, false]; // Un valor para cada opción
 
   @override
   void initState() {
@@ -118,71 +119,122 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xffC9DEF4),
-        title:
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                showFutureEvents = !showFutureEvents;
-                showUpcomingEventsOnly =
-                    false; // Restablecer el filtro de eventos próximos
-              });
-            },
-            child: Icon(showFutureEvents
-                ? BoxIcons.bx_low_vision
-                : BoxIcons.bx_show_alt),
-          ),
-          ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  showUpcomingEventsOnly = !showUpcomingEventsOnly;
-                });
-              },
-              child: Icon(showUpcomingEventsOnly
-                  ? BoxIcons.bx_toggle_right
-                  : BoxIcons.bx_toggle_left)),
-        ]),
-      ),
+          backgroundColor: Color(0xffF71735),
+          foregroundColor: Color(0xffFDFFFC),
+          title: Row(
+            children: const [
+              Text('Gestor de Eventos'),
+            ],
+          )),
       body: Container(
         //padding: const EdgeInsets.all(15.0),
         decoration: const BoxDecoration(
-          color: Color(0xffB8A4C9),
+          color: Color(0xff011627),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Nuevo: Botón para alternar entre eventos futuros y pasados
 
-            Expanded(
-                child: StreamBuilder<List<Evento>>(
-              stream: _eventosStream,
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return const Center(child: Text('Error al cargar eventos'));
-                }
-
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                final eventos = snapshot.data ?? [];
-                final filteredEventos = filterEventos(
-                    showFutureEvents, showUpcomingEventsOnly, eventos);
-
-                return ListView.builder(
-                  itemCount: filteredEventos.length,
-                  itemBuilder: (context, index) {
-                    return CardEventoHome(
-                      evento: filteredEventos[index],
-                      onToggleState: () => _toggleEventoState(
-                          filteredEventos[index].id,
-                          filteredEventos[index].like),
-                    );
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Container(
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Color(0xff41EAD4)),
+                child: ToggleButtons(
+                  onPressed: (int index) {
+                    setState(() {
+                      if (index == 0) {
+                        showFutureEvents = false;
+                        showUpcomingEventsOnly = false;
+                      } else if (index == 1) {
+                        showFutureEvents = true;
+                        showUpcomingEventsOnly = false;
+                      } else {
+                        showFutureEvents = false;
+                        showUpcomingEventsOnly = true;
+                      }
+                    });
                   },
-                );
-              },
-            )),
+                  isSelected: [
+                    !showFutureEvents && !showUpcomingEventsOnly,
+                    showFutureEvents,
+                    showUpcomingEventsOnly
+                  ],
+                  borderRadius: BorderRadius.circular(10),
+                  selectedBorderColor: Color(0xffFDFFFC),
+                  selectedColor: Color(0xffFDFFFC),
+                  fillColor: Color(0xffF71735),
+                  color: Color(0xff011627),
+                  borderColor: Color(0xffFDFFFC),
+                  splashColor: Color(0xff9D061A),
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Row(
+                        children: [
+                          Icon(FontAwesome.clock_rotate_left),
+                          SizedBox(width: 8.0),
+                          Text('Pasados'),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Row(
+                        children: [
+                          Icon(FontAwesome.play),
+                          SizedBox(width: 8.0),
+                          Text('Activos'),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Row(
+                        children: [
+                          Icon(FontAwesome.calendar),
+                          SizedBox(width: 8.0),
+                          Text('Próximos'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            Expanded(
+              child: StreamBuilder<List<Evento>>(
+                stream: _eventosStream,
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return const Center(child: Text('Error al cargar eventos'));
+                  }
+
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final eventos = snapshot.data ?? [];
+                  final filteredEventos = filterEventos(
+                      showFutureEvents, showUpcomingEventsOnly, eventos);
+
+                  return ListView.builder(
+                    itemCount: filteredEventos.length,
+                    itemBuilder: (context, index) {
+                      return CardEventoHome(
+                        evento: filteredEventos[index],
+                        onToggleState: () => _toggleEventoState(
+                            filteredEventos[index].id,
+                            filteredEventos[index].like),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
