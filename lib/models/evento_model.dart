@@ -7,6 +7,7 @@ class Evento {
   final String tipo;
   final bool finalizado; // Nuevo campo
   final int like; // Nuevo campo
+  
 
   Evento({
     required this.id,
@@ -19,3 +20,4 @@ class Evento {
     this.like = 0, // Valor predeterminado para los likes
   });
 }
+

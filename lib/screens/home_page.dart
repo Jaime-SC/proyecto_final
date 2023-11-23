@@ -15,6 +15,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final db = FirebaseFirestore.instance;
   late Stream<List<Evento>> _eventosStream;
+  bool showFutureEvents =
+      true; // Nuevo: Variable para alternar entre eventos futuros y pasados
+  bool showUpcomingEventsOnly = false;
 
   @override
   void initState() {
@@ -36,26 +39,61 @@ class _HomePageState extends State<HomePage> {
           lugar: data['lugar'] ?? '',
           fecha: (data['fecha_hora'] as Timestamp?)?.toDate() ?? DateTime.now(),
           tipo: data['tipo'] ?? '',
-          finalizado: data['finalizado'] ?? false, // Agrega 'finalizado'
+          like: data['like'] ?? 0,
+          finalizado: data['finalizado'] ?? false,
         );
       }).toList();
     });
   }
 
- Future<void> _toggleEventoState(String eventoId, bool currentState) async {
+  Future<void> _toggleEventoState(String eventoId, bool currentState) async {
     try {
-      await db.collection('eventos').doc(eventoId).update({
-        'finalizado': !currentState, // Cambia el estado opuesto al actual
+      final eventoRef = db.collection('eventos').doc(eventoId);
+
+      // Actualiza el contador de likes en la colección de eventos
+      await eventoRef.update({
+        'like':
+            currentState ? FieldValue.increment(-1) : FieldValue.increment(1),
       });
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Estado del evento actualizado')),
+        SnackBar(content: Text('Me gusta actualizado')),
       );
-      // Añade la siguiente línea para actualizar la lista de eventos en HomePage
-      _eventosStream = _getEventosStream(); // Reasigna el stream
+
+      // Recarga la lista de eventos
+      _eventosStream = _getEventosStream();
     } catch (e) {
       print('Error al cambiar el estado del evento: $e');
     }
   }
+
+  List<Evento> filterEventos(
+      bool showFutureEvents, bool showUpcomingEvents, List<Evento> eventos) {
+    final now = DateTime.now();
+
+    if (showUpcomingEvents) {
+      return eventos
+          .where((evento) =>
+              !evento.finalizado &&
+              evento.fecha.isBefore(now.add(const Duration(days: 3))))
+          .toList();
+    } else if (showFutureEvents) {
+      return eventos.where((evento) => !evento.finalizado).toList();
+    } else {
+      return eventos.where((evento) => evento.finalizado).toList();
+    }
+  }
+
+  List<Evento> getUpcomingEvents(List<Evento> eventos) {
+    final now = DateTime.now();
+    final upcomingEvents = eventos
+        .where((evento) =>
+            !evento.finalizado &&
+            evento.fecha.isBefore(now.add(const Duration(days: 3))))
+        .toList();
+    return upcomingEvents;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -93,33 +131,58 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            Expanded(
-              child: StreamBuilder<List<Evento>>(
-                stream: _eventosStream,
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return const Center(child: Text('Error al cargar eventos'));
-                  }
 
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  final eventos = snapshot.data ?? [];
-
-                  return ListView.builder(
-                    itemCount: eventos.length,
-                    itemBuilder: (context, index) {
-                      return CardEventoHome(
-                        evento: eventos[index],                        
-                        onToggleState: () => _toggleEventoState(
-                            eventos[index].id, eventos[index].finalizado),
-                      );
-                    },
-                  );
-                },
-              ),
+            // Nuevo: Botón para alternar entre eventos futuros y pasados
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  showFutureEvents = !showFutureEvents;
+                  showUpcomingEventsOnly =
+                      false; // Restablecer el filtro de eventos próximos
+                });
+              },
+              child: Text(showFutureEvents
+                  ? 'Ver Eventos Pasados'
+                  : 'Ver Eventos Futuros'),
             ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  showUpcomingEventsOnly = !showUpcomingEventsOnly;
+                });
+              },
+              child: Text('Ver Eventos Próximos'),
+            ),
+
+            Expanded(
+                child: StreamBuilder<List<Evento>>(
+              stream: _eventosStream,
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return const Center(child: Text('Error al cargar eventos'));
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final eventos = snapshot.data ?? [];
+                final filteredEventos = filterEventos(
+                    showFutureEvents, showUpcomingEventsOnly, eventos);
+
+                return ListView.builder(
+                  itemCount: filteredEventos.length,
+                  itemBuilder: (context, index) {
+                    return CardEventoHome(
+                      evento: filteredEventos[index],
+                      onToggleState: () => _toggleEventoState(
+                          filteredEventos[index].id,
+                          filteredEventos[index].finalizado),
+                    );
+                  },
+                );
+              },
+            )),
           ],
         ),
       ),
