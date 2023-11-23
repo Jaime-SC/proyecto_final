@@ -97,96 +97,103 @@ class CardEventoAdmin extends StatelessWidget {
 
 class CardEventoHome extends StatelessWidget {
   final Evento evento;
-  final VoidCallback onToggleState; // Add this line
-  
+  final VoidCallback onToggleState;
 
   const CardEventoHome({
     Key? key,
     required this.evento,
-    required this.onToggleState, // Add this line
+    required this.onToggleState,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return ExpansionTile(
-      backgroundColor: Color(0xffC9DEF4),
-      collapsedBackgroundColor: Color(0xffF5CCD4),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                evento.nombre,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18.0,
-                ),
-              ),
-              Text(
-                'Estado: ${evento.finalizado ? "Finalizado" : "En curso"}',
-                style: TextStyle(
-                  color: evento.finalizado ? Colors.red : Colors.green,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          ElevatedButton(
-            onPressed: () {
-              onToggleState();
-            },
-            child: Row(
-              
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Material(
+        elevation: 4, // Agrega elevación para la sombra
+        borderRadius: BorderRadius.circular(10.0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: ExpansionTile(
+            backgroundColor: Color(0xffC9DEF4),
+            collapsedBackgroundColor: Color(0xffF5CCD4),
+            shape: InputBorder.none,
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(HeroIcons.heart),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 5),
-                  child: Text(
-                    '${evento.like}',
-                    style: const TextStyle(fontSize: 14.0),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      evento.nombre,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18.0,
+                      ),
+                    ),
+                    Text(
+                      'Estado: ${evento.finalizado ? "Finalizado" : "En curso"}',
+                      style: TextStyle(
+                        color: evento.finalizado ? Colors.red : Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    onToggleState();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    elevation: 4, // Ajusta el valor según sea necesario
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.favorite),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        child: Text(
+                          '${evento.like}',
+                          style: const TextStyle(fontSize: 14.0),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'Descripción: ${evento.descripcion}',
-                style: const TextStyle(fontSize: 16.0),
-              ),
-              const SizedBox(height: 8.0),
-              Text(
-                'Fecha del evento: ${evento.fecha}',
-                style: const TextStyle(fontSize: 14.0),
-              ),
-              const SizedBox(height: 8.0),
-              Text(
-                'Lugar: ${evento.lugar}',
-                style: const TextStyle(fontSize: 14.0),
-              ),
-              const SizedBox(height: 8.0),
-              Text(
-                'Tipo: ${evento.tipo}',
-                style: const TextStyle(fontSize: 14.0),
-              ),
-              Text(
-                'like: ${evento.like}',
-                style: const TextStyle(fontSize: 14.0),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Descripción: ${evento.descripcion}',
+                      style: const TextStyle(fontSize: 16.0),
+                    ),
+                    const SizedBox(height: 8.0),
+                    Text(
+                      'Fecha del evento: ${evento.fecha}',
+                      style: const TextStyle(fontSize: 14.0),
+                    ),
+                    const SizedBox(height: 8.0),
+                    Text(
+                      'Lugar: ${evento.lugar}',
+                      style: const TextStyle(fontSize: 14.0),
+                    ),
+                    const SizedBox(height: 8.0),
+                    Text(
+                      'Tipo: ${evento.tipo}',
+                      style: const TextStyle(fontSize: 14.0),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
         ),
-      ],
+      ),
     );
   }
 }

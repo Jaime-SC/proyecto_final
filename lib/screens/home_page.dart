@@ -18,6 +18,7 @@ class _HomePageState extends State<HomePage> {
   bool showFutureEvents =
       true; // Nuevo: Variable para alternar entre eventos futuros y pasados
   bool showUpcomingEventsOnly = false;
+  bool isUpdating = false;
 
   @override
   void initState() {
@@ -46,24 +47,43 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<void> _toggleEventoState(String eventoId, bool currentState) async {
-    try {
-      final eventoRef = db.collection('eventos').doc(eventoId);
+  Future<void> _toggleEventoState(String eventoId, int currentLikeCount) async {
+    if (isUpdating) {
+      return;
+    }
 
-      // Actualiza el contador de likes en la colección de eventos
-      await eventoRef.update({
-        'like':
-            currentState ? FieldValue.increment(-1) : FieldValue.increment(1),
+    try {
+      setState(() {
+        isUpdating = true;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Me gusta actualizado')),
-      );
+      final eventoRef = db.collection('eventos').doc(eventoId);
+      final currentUserId = FirebaseService.getCurrentUserId();
 
-      // Recarga la lista de eventos
-      _eventosStream = _getEventosStream();
+      final eventoDoc = await eventoRef.get();
+      final eventData = eventoDoc.data() as Map<String, dynamic>;
+
+      final bool alreadyLiked =
+          (eventData['likes'] as List<dynamic>?)?.contains(currentUserId) ??
+              false;
+
+      if (alreadyLiked) {
+        await eventoRef.update({
+          'like': FieldValue.increment(-1),
+          'likes': FieldValue.arrayRemove([currentUserId]),
+        });
+      } else {
+        await eventoRef.update({
+          'like': FieldValue.increment(1),
+          'likes': FieldValue.arrayUnion([currentUserId]),
+        });
+      }
     } catch (e) {
       print('Error al cambiar el estado del evento: $e');
+    } finally {
+      setState(() {
+        isUpdating = false;
+      });
     }
   }
 
@@ -97,62 +117,42 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color(0xffC9DEF4),
+        title:
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                showFutureEvents = !showFutureEvents;
+                showUpcomingEventsOnly =
+                    false; // Restablecer el filtro de eventos próximos
+              });
+            },
+            child: Icon(showFutureEvents
+                ? BoxIcons.bx_low_vision
+                : BoxIcons.bx_show_alt),
+          ),
+          ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  showUpcomingEventsOnly = !showUpcomingEventsOnly;
+                });
+              },
+              child: Icon(showUpcomingEventsOnly
+                  ? BoxIcons.bx_toggle_right
+                  : BoxIcons.bx_toggle_left)),
+        ]),
+      ),
       body: Container(
-        padding: const EdgeInsets.all(15.0),
+        //padding: const EdgeInsets.all(15.0),
         decoration: const BoxDecoration(
           color: Color(0xffB8A4C9),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 35),
-              child: ElevatedButton(
-                style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStatePropertyAll(const Color(0xffF7FFF7)),
-                ),
-                onPressed: () {
-                  FirebaseService.signInWithGoogle(context);
-                },
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Logo(Logos.google, size: 20),
-                    const SizedBox(width: 8.0),
-                    const Text(
-                      'Iniciar Sesión con Google',
-                      style: TextStyle(
-                        color: Color(0xff292F36),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
             // Nuevo: Botón para alternar entre eventos futuros y pasados
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  showFutureEvents = !showFutureEvents;
-                  showUpcomingEventsOnly =
-                      false; // Restablecer el filtro de eventos próximos
-                });
-              },
-              child: Text(showFutureEvents
-                  ? 'Ver Eventos Pasados'
-                  : 'Ver Eventos Futuros'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  showUpcomingEventsOnly = !showUpcomingEventsOnly;
-                });
-              },
-              child: Text('Ver Eventos Próximos'),
-            ),
 
             Expanded(
                 child: StreamBuilder<List<Evento>>(
@@ -177,12 +177,38 @@ class _HomePageState extends State<HomePage> {
                       evento: filteredEventos[index],
                       onToggleState: () => _toggleEventoState(
                           filteredEventos[index].id,
-                          filteredEventos[index].finalizado),
+                          filteredEventos[index].like),
                     );
                   },
                 );
               },
             )),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                style: ButtonStyle(
+                  backgroundColor:
+                      MaterialStatePropertyAll(const Color(0xffF7FFF7)),
+                ),
+                onPressed: () {
+                  FirebaseService.signInWithGoogle(context);
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Logo(Logos.google, size: 20),
+                    const SizedBox(width: 8.0),
+                    const Text(
+                      'Iniciar Sesión con Google',
+                      style: TextStyle(
+                        color: Color(0xff292F36),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),

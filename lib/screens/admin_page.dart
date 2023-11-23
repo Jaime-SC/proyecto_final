@@ -1,5 +1,3 @@
-// DALE AL FUNCION DE PODER EDITAR EL CONTENIDO DEL EVENTO
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:datetime_picker_formfield_new/datetime_picker_formfield.dart';
 import 'package:flutter/material.dart';
