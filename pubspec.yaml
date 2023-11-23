@@ -43,6 +43,8 @@ dependencies:
   cloud_firestore: ^4.13.1
   intl: ^0.18.1
   datetime_picker_formfield_new: ^2.1.0
+  image_picker: ^1.0.4
+  firebase_storage: ^11.5.2
 
 dev_dependencies:
   flutter_test:
@@ -67,9 +69,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/imagen/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

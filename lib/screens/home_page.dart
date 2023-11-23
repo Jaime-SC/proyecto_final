@@ -33,6 +33,8 @@ class _HomePageState extends State<HomePage> {
           descripcion: data['descripcion'] ?? '',
           fecha: (data['fecha_hora'] as Timestamp?)?.toDate() ?? DateTime.now(),
           tipo: data['tipo'] ?? '',
+          imagenURL: data['imagenURL'] ?? '', // Asigna la URL de la imagen si está disponible en Firestore
+
         );
       }).toList();
     });

@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:proyecto_final/firebase_options.dart';
+import 'package:proyecto_final/screens/admin_page.dart';
 import 'package:proyecto_final/screens/home_page.dart';
 
 void main() async {
@@ -22,7 +23,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xffF7FFF7)),
         useMaterial3: true,
       ),
-      home: const HomePage(),
+      home: const AdminPage(),
 
     );
   }

@@ -5,11 +5,18 @@ import '../models/evento_model.dart';
 
 class CardEvento extends StatelessWidget {
   final Evento evento;
+  final String selectedImage;
 
-  const CardEvento({Key? key, required this.evento}) : super(key: key);
+
+  const CardEvento({
+    Key? key,
+    required this.evento,
+    this.selectedImage = 'assets/imagen/imagen1.jpg', // Valor por defecto
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = 'assets/imagen/${evento.imagenURL}';
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       child: Padding(
@@ -25,6 +32,12 @@ class CardEvento extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8.0),
+            Image.asset(
+              selectedImage,
+              width: 100,
+              height: 100,
+            ),
+            const SizedBox(height: 8.0),
             Text(
               evento.descripcion,
               style: const TextStyle(fontSize: 16.0),
@@ -37,9 +50,7 @@ class CardEvento extends StatelessWidget {
             const SizedBox(height: 8.0),
             ElevatedButton(
               onPressed: () {
-                // Funcionalidad para indicar que me gusta un evento
-                // Puedes implementar esta función según tus necesidades
-                // Ejemplo: FirebaseService.indicarMeGusta(evento);
+
               },
               child: const Text('Me gusta'),
             ),

@@ -1,11 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:datetime_picker_formfield_new/datetime_picker_formfield.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../fire_functions.dart';
 import '../models/evento_model.dart';
 import '../widgets/widgets_ui.dart';
 import 'home_page.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage; // Importa el paquete de Firebase Storage
+import 'dart:io';
+
 
 class AdminPage extends StatefulWidget {
   const AdminPage({Key? key}) : super(key: key);
@@ -25,6 +30,23 @@ class _AdminPageState extends State<AdminPage> {
   int _eventLikes = 0;
   List<String> _eventTypes = [];
   late Stream<List<Evento>> _eventosStream;
+  final ImagePicker _picker = ImagePicker();
+  String _selectedImagePath = '';
+  
+  String _selectedImage = 'assets/imagen1.jpg'; // Imagen predeterminada seleccionada
+
+  final List<String> _imageOptions = [
+    'assets/imagen/imagen1.jpg',
+    'assets/imagen/imagen2.jpg',
+    // Agrega todas las rutas de las imágenes disponibles
+  ];
+
+
+  void _selectImage(String imagePath) {
+    setState(() {
+      _selectedImage = imagePath;
+    });
+  }
 
   @override
   void initState() {
@@ -56,13 +78,18 @@ class _AdminPageState extends State<AdminPage> {
           descripcion: data['descripcion'] ?? '',
           fecha: (data['fecha_hora'] as Timestamp?)?.toDate() ?? DateTime.now(),
           tipo: data['tipo'] ?? '',
+          imagenURL: _selectedImagePath,
+
         );
       }).toList();
     });
   }
 
-  Future<void> _submitForm() async {
-    if (_formKey.currentState!.validate()) {
+Future<void> _submitForm() async {
+  if (_formKey.currentState!.validate()) {
+    String? imageURL = await uploadAssetImageToFirebaseStorage(_selectedImage);
+
+    if (imageURL != null) {
       await db.collection('eventos').add({
         'nombre': _eventName,
         'fecha_hora': _eventDateTime,
@@ -70,10 +97,13 @@ class _AdminPageState extends State<AdminPage> {
         'descripcion': _eventDescription,
         'tipo': _eventType,
         'like': _eventLikes,
+        'imageURL': imageURL,
       });
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Evento creado con éxito')),
       );
+
       setState(() {
         _eventName = '';
         _eventDateTime = DateTime.now();
@@ -81,10 +111,18 @@ class _AdminPageState extends State<AdminPage> {
         _eventDescription = '';
         _eventType = '';
         _eventLikes = 0;
+        _selectedImage = 'assets/imagen1.jpg';
       });
-      Navigator.pop(context);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const AdminPage()),
+      );
+    } else {
+      
     }
   }
+}
 
   Future<void> _signOut() async {
     await FirebaseService.signOutFromGoogle();
@@ -92,6 +130,55 @@ class _AdminPageState extends State<AdminPage> {
       context,
       MaterialPageRoute(builder: (context) => const HomePage()),
     );
+  }
+
+  Future<String?> uploadImageToFirebaseStorage(String imagePath) async {
+    File file = File(imagePath);
+
+    try {
+      firebase_storage.Reference ref = firebase_storage.FirebaseStorage.instance
+          .ref()
+          .child('images')
+          .child('nombre_imagen.jpg');
+
+      await ref.putFile(file);
+
+      String downloadURL = await ref.getDownloadURL();
+      return downloadURL;
+    } catch (e) {
+      print('Error al subir imagen: $e');
+      return null;
+    }
+  }
+
+Future<String?> uploadAssetImageToFirebaseStorage(String assetImagePath) async {
+  try {
+    final ByteData data = await rootBundle.load(assetImagePath);
+    final List<int> bytes = data.buffer.asUint8List();
+
+    firebase_storage.Reference ref = firebase_storage.FirebaseStorage.instance
+        .ref()
+        .child('images')
+        .child('nombre_imagen.jpg');
+
+    await ref.putData(Uint8List.fromList(bytes)); // Convertir la lista de enteros a Uint8List
+
+    String downloadURL = await ref.getDownloadURL();
+    return downloadURL;
+  } catch (e) {
+    print('Error al subir imagen: $e');
+    return null;
+  }
+}
+
+  Future<String?> _getImageAndUpload() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      String imagePath = pickedFile.path;
+      return await uploadImageToFirebaseStorage(imagePath);
+    } else {
+      return null;
+    }
   }
 
   @override
@@ -247,6 +334,26 @@ class _AdminPageState extends State<AdminPage> {
                   );
                 }).toList(),
               ),
+              const SizedBox(height: 16.0),
+          const Text('Selecciona una imagen:'),
+          Wrap(
+            children: _imageOptions.map((imagePath) {
+              return GestureDetector(
+                onTap: () {
+                  _selectImage(imagePath); // Esta función actualiza la imagen seleccionada
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Image.asset(
+                    imagePath,
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
               const SizedBox(height: 16.0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,

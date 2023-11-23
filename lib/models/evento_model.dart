@@ -6,6 +6,8 @@ class Evento {
   final String descripcion;
   final DateTime fecha;
   final String tipo;
+  final String imagenURL;
+
 
   Evento({
     required this.id,
@@ -13,5 +15,8 @@ class Evento {
     required this.descripcion,
     required this.fecha,
     required this.tipo,
+    required this.imagenURL,
+
   });
 }
+
