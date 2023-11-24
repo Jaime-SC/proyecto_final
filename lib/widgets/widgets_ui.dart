@@ -19,6 +19,7 @@ class CardEventoAdmin extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Color(0xffB6F7EE),
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -41,7 +42,9 @@ class CardEventoAdmin extends StatelessWidget {
                     Text(
                       'Estado: ${evento.finalizado ? "Finalizado" : "En curso"}',
                       style: TextStyle(
-                        color: evento.finalizado ? Colors.red : Colors.green,
+                        color: evento.finalizado
+                            ? Color(0xffFF0000)
+                            : Color(0xff00CC00),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -49,7 +52,11 @@ class CardEventoAdmin extends StatelessWidget {
                 ),
                 ElevatedButton(
                   onPressed: onToggleState,
-                  child: const Icon(HeroIcons.arrow_path),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xff011627),
+                    elevation: 4, // Ajusta el valor según sea necesario
+                  ),
+                  child: const Icon(FontAwesome.rotate, color: Color(0xffFDFFFC)),
                 ),
               ],
             ),
@@ -79,12 +86,21 @@ class CardEventoAdmin extends StatelessWidget {
               children: [
                 ElevatedButton(
                   onPressed: onDelete,
-                  child: const Icon(HeroIcons.trash),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xff011627),
+                    elevation: 4, // Ajusta el valor según sea necesario
+                  ),
+                  child: const Icon(FontAwesome.trash_can, color: Color(0xffFDFFFC)),
                 ),
                 const SizedBox(height: 8.0),
                 ElevatedButton(
                   onPressed: onEdit, // Usa onEdit aquí
-                  child: const Icon(HeroIcons.pencil),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xff011627),
+                    elevation: 4, // Ajusta el valor según sea necesario
+                  ),
+                  child:
+                      const Icon(FontAwesome.pencil, color: Color(0xffFDFFFC)),
                 ),
               ],
             ),
@@ -115,7 +131,7 @@ class CardEventoHome extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(10),
           child: ExpansionTile(
-            backgroundColor: Color(0xffFDFFFC),
+            backgroundColor: Color(0xffB6F7EE),
             collapsedBackgroundColor: Color(0xffB6F7EE),
             shape: InputBorder.none,
             title: Row(
@@ -156,7 +172,8 @@ class CardEventoHome extends StatelessWidget {
                       SizedBox(width: 8.0),
                       Text(
                         '${evento.like}',
-                        style: const TextStyle(fontSize: 14.0, color: Color(0xffFDFFFC)),
+                        style: const TextStyle(
+                            fontSize: 14.0, color: Color(0xffFDFFFC)),
                       ),
                     ],
                   ),

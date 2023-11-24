@@ -122,8 +122,24 @@ class _HomePageState extends State<HomePage> {
           backgroundColor: Color(0xffF71735),
           foregroundColor: Color(0xffFDFFFC),
           title: Row(
-            children: const [
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
               Text('Gestor de Eventos'),
+              ElevatedButton(
+                onPressed: () {
+                  FirebaseService.signInWithGoogle(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xffFDFFFC),
+                  elevation: 4, // Ajusta el valor según sea necesario
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Logo(Logos.google, size: 20),
+                  ],
+                ),
+              ),
             ],
           )),
       body: Container(
@@ -140,8 +156,9 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.all(16.0),
               child: Container(
                 decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Color(0xff41EAD4)),
+                  borderRadius: BorderRadius.circular(10),
+                  color: Color(0xff41EAD4),
+                ),
                 child: ToggleButtons(
                   onPressed: (int index) {
                     setState(() {
@@ -233,32 +250,6 @@ class _HomePageState extends State<HomePage> {
                     },
                   );
                 },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStatePropertyAll(const Color(0xffF7FFF7)),
-                ),
-                onPressed: () {
-                  FirebaseService.signInWithGoogle(context);
-                },
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Logo(Logos.google, size: 20),
-                    const SizedBox(width: 8.0),
-                    const Text(
-                      'Iniciar Sesión con Google',
-                      style: TextStyle(
-                        color: Color(0xff292F36),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ),
           ],

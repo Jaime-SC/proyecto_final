@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:datetime_picker_formfield_new/datetime_picker_formfield.dart';
 import 'package:flutter/material.dart';
+import 'package:icons_plus/icons_plus.dart';
 import 'package:intl/intl.dart';
 import '../models/evento_model.dart';
 import '../services/firebase_service.dart';
@@ -153,7 +154,6 @@ class _AdminPageState extends State<AdminPage> {
     return Dialog(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-
         child: Form(
           key: _formKey,
           child: Column(
@@ -309,13 +309,29 @@ class _AdminPageState extends State<AdminPage> {
       appBar: AppBar(
         backgroundColor: Color(0xffF71735),
         foregroundColor: Color(0xffFDFFFC),
+        leading: GestureDetector(
+          onTap: () {
+            // Aquí deberías agregar la lógica para volver a la página home_page.dart
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage()),
+            );
+          },
+          child: const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Icon(FontAwesome.house),
+          ),
+        ),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text('Admin Page'),
-            ElevatedButton(
-              onPressed: _signOut,
-              child: const Text('Cerrar Sesión'),
+            GestureDetector(
+              onTap: _signOut,
+              child: const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Icon(FontAwesome.arrow_right_from_bracket),
+              ),
             ),
           ],
         ),
@@ -323,7 +339,6 @@ class _AdminPageState extends State<AdminPage> {
       body: Container(
         color: Color(0xff011627),
         child: Padding(
-          
           padding: const EdgeInsets.all(15.0),
           child: StreamBuilder<List<Evento>>(
             stream: _eventosStream,
@@ -331,13 +346,13 @@ class _AdminPageState extends State<AdminPage> {
               if (snapshot.hasError) {
                 return const Center(child: Text('Error al cargar eventos'));
               }
-      
+
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
-      
+
               final eventos = snapshot.data ?? [];
-      
+
               return ListView.builder(
                 itemCount: eventos.length,
                 itemBuilder: (context, index) {
@@ -356,6 +371,9 @@ class _AdminPageState extends State<AdminPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Color(0xffF71735),
+        foregroundColor: Color(0xffFDFFFC),
+        elevation: 8,
         onPressed: () {
           showDialog(
             context: context,
@@ -371,12 +389,17 @@ class _AdminPageState extends State<AdminPage> {
 
   Widget _buildAddEventDialog() {
     return Dialog(
+      backgroundColor: Color(0xffB6F7EE),
+      
       child: Padding(
         padding: const EdgeInsets.all(16.0),
+
         child: Form(
           key: _formKey,
+
           child: Column(
             mainAxisSize: MainAxisSize.min,
+
             children: [
               TextFormField(
                 decoration:
