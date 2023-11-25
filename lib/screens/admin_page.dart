@@ -1,12 +1,16 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:datetime_picker_formfield_new/datetime_picker_formfield.dart';
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../models/evento_model.dart';
 import '../services/firebase_service.dart';
 import '../widgets/widgets_ui.dart';
 import 'home_page.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
 class AdminPage extends StatefulWidget {
   const AdminPage({Key? key}) : super(key: key);
@@ -18,7 +22,12 @@ class AdminPage extends StatefulWidget {
 class _AdminPageState extends State<AdminPage> {
   final db = FirebaseFirestore.instance;
   final _formKey = GlobalKey<FormState>();
+  final _picker = ImagePicker();
+
+  String _imageUrl = ''; // Nuevo campo
+
   String _eventName = '';
+
   DateTime _eventDateTime = DateTime.now();
 
   String _eventDescription = '';
@@ -33,6 +42,28 @@ class _AdminPageState extends State<AdminPage> {
     super.initState();
     _loadEventTypes();
     _eventosStream = _getEventosStream();
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      final imageFile = File(pickedFile.path);
+
+      // Subir la imagen a Firebase Storage
+      final storageRef = firebase_storage.FirebaseStorage.instance
+          .ref()
+          .child('event_images')
+          .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
+      await storageRef.putFile(imageFile);
+
+      // Obtener la URL de la imagen
+      final imageUrl = await storageRef.getDownloadURL();
+
+      setState(() {
+        _imageUrl = imageUrl;
+      });
+    }
   }
 
   Future<void> _loadEventTypes() async {
@@ -59,13 +90,40 @@ class _AdminPageState extends State<AdminPage> {
   }
 
   Future<void> _deleteEvento(String eventoId) async {
-    try {
-      await db.collection('eventos').doc(eventoId).delete();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Evento eliminado con éxito')),
-      );
-    } catch (e) {
-      print('Error al eliminar el evento: $e');
+    bool confirmDelete = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirmar eliminación'),
+          content:
+              const Text('¿Estás seguro de que quieres eliminar este evento?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true); // Confirma la eliminación
+              },
+              child: const Text('Sí'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); // Cancela la eliminación
+              },
+              child: const Text('No'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmDelete) {
+      try {
+        await db.collection('eventos').doc(eventoId).delete();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Evento eliminado con éxito')),
+        );
+      } catch (e) {
+        print('Error al eliminar el evento: $e');
+      }
     }
   }
 
@@ -95,7 +153,9 @@ class _AdminPageState extends State<AdminPage> {
           lugar: data['lugar'] ?? '',
           fecha: (data['fecha_hora'] as Timestamp?)?.toDate() ?? DateTime.now(),
           tipo: data['tipo'] ?? '',
-          finalizado: data['finalizado'] ?? false, // Agrega 'finalizado'
+          like: data['like'] ?? 0,
+          finalizado: data['finalizado'] ?? false,
+          imageUrl: data['imageUrl'] ?? '', // Asegúrate de agregar esto
         );
       }).toList();
     });
@@ -106,12 +166,12 @@ class _AdminPageState extends State<AdminPage> {
       await db.collection('eventos').add({
         'nombre': _eventName,
         'fecha_hora': _eventDateTime,
-
         'descripcion': _eventDescription,
         'lugar': _eventLugar,
         'tipo': _eventType,
         'like': _eventLikes,
-        'finalizado': false, // Set the default value to false
+        'finalizado': false,
+        'imageUrl': _imageUrl, // Asegúrate de agregar esto
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Evento creado con éxito')),
@@ -143,6 +203,7 @@ class _AdminPageState extends State<AdminPage> {
     final TextEditingController lugarController = TextEditingController();
     final TextEditingController fechaController = TextEditingController();
     final TextEditingController tipoController = TextEditingController();
+    final TextEditingController imageUrlController = TextEditingController();
 
     // Llena los controladores con la información actual del evento
     nombreController.text = evento.nombre;
@@ -150,6 +211,7 @@ class _AdminPageState extends State<AdminPage> {
     lugarController.text = evento.lugar;
     fechaController.text = DateFormat('yyyy-MM-dd HH:mm').format(evento.fecha);
     tipoController.text = evento.tipo;
+    imageUrlController.text = evento.imageUrl; // Agrega esta línea
 
     return Dialog(
       child: Padding(
@@ -262,6 +324,18 @@ class _AdminPageState extends State<AdminPage> {
                 },
               ),
               const SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: () async {
+                  // Lógica para seleccionar una nueva imagen y actualizar la URL
+                  await _pickImage();
+                },
+                child: const Text('Seleccionar Imagen'),
+              ),
+              const SizedBox(height: 16.0),
+              Image.network(evento.imageUrl),
+              // Mostrar la imagen seleccionada
+
+              const SizedBox(height: 16.0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -281,6 +355,8 @@ class _AdminPageState extends State<AdminPage> {
                           'lugar': lugarController.text,
                           'fecha_hora': DateTime.parse(fechaController.text),
                           'tipo': tipoController.text,
+                          'imageUrl':
+                              _imageUrl, // Actualiza la URL de la imagen
                         });
 
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -311,8 +387,8 @@ class _AdminPageState extends State<AdminPage> {
         foregroundColor: Color(0xffFDFFFC),
         leading: GestureDetector(
           onTap: () {
-            // Aquí deberías agregar la lógica para volver a la página home_page.dart
-            Navigator.push(
+            // Utiliza Navigator.pushReplacement para reemplazar la página actual
+            Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => HomePage()),
             );
@@ -390,16 +466,12 @@ class _AdminPageState extends State<AdminPage> {
   Widget _buildAddEventDialog() {
     return Dialog(
       backgroundColor: Color(0xffB6F7EE),
-      
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-
         child: Form(
           key: _formKey,
-
           child: Column(
             mainAxisSize: MainAxisSize.min,
-
             children: [
               TextFormField(
                 decoration:
@@ -419,7 +491,7 @@ class _AdminPageState extends State<AdminPage> {
                 onShowPicker: (context, currentValue) async {
                   return await showDatePicker(
                     context: context,
-                    firstDate: DateTime(2000),
+                    firstDate: DateTime.now(),
                     initialDate: currentValue ?? DateTime.now(),
                     lastDate: DateTime(2100),
                   ).then((selectedDate) async {
@@ -495,6 +567,16 @@ class _AdminPageState extends State<AdminPage> {
                 }).toList(),
               ),
               const SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: () async {
+                  // Lógica para seleccionar una nueva imagen y actualizar la URL
+                  await _pickImage();
+                },
+                child: const Text('Seleccionar Imagen'),
+              ),
+              // const SizedBox(height: 16.0),
+              // Image.network(_imageUrl), // Mostrar la imagen seleccionada
+              // const SizedBox(height: 16.0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [

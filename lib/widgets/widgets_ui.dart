@@ -7,6 +7,7 @@ class CardEventoAdmin extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback onToggleState;
   final VoidCallback onEdit; // Agrega esta línea
+  
 
   const CardEventoAdmin({
     Key? key,
@@ -26,6 +27,7 @@ class CardEventoAdmin extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -80,6 +82,8 @@ class CardEventoAdmin extends StatelessWidget {
               'Tipo: ${evento.tipo}',
               style: const TextStyle(fontSize: 14.0),
             ),
+            const SizedBox(height: 8.0),
+            Image.network(evento.imageUrl),
             const SizedBox(height: 8.0),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -205,6 +209,7 @@ class CardEventoHome extends StatelessWidget {
                       'Tipo: ${evento.tipo}',
                       style: const TextStyle(fontSize: 14.0),
                     ),
+                    Image.network(evento.imageUrl),
                   ],
                 ),
               ),

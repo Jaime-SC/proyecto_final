@@ -8,6 +8,8 @@ class Evento {
   final bool finalizado;
   late final int like;
   final Set<String> usuariosLiked; // Nuevo campo
+  final String imageUrl;
+  
 
   Evento({
     required this.id,
@@ -18,6 +20,8 @@ class Evento {
     required this.tipo,
     this.finalizado = false,
     this.like = 0,
+    required this.imageUrl,
+
     Set<String>? usuariosLiked, // Nuevo parámetro opcional
   }) : usuariosLiked = usuariosLiked ?? {}; // Inicializa el conjunto si es nulo
 }

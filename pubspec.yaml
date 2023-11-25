@@ -43,7 +43,10 @@ dependencies:
   cloud_firestore: ^4.13.1
   intl: ^0.18.1
   datetime_picker_formfield_new: ^2.1.0
-  
+  uuid: ^4.2.1
+  image_picker: ^1.0.4
+  firebase_storage: ^11.5.2
+
 
 dev_dependencies:
   flutter_test:

@@ -4,6 +4,7 @@ import 'package:icons_plus/icons_plus.dart';
 import '../models/evento_model.dart';
 import '../services/firebase_service.dart';
 import '../widgets/widgets_ui.dart';
+import 'admin_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -43,6 +44,7 @@ class _HomePageState extends State<HomePage> {
           tipo: data['tipo'] ?? '',
           like: data['like'] ?? 0,
           finalizado: data['finalizado'] ?? false,
+          imageUrl: data['imageUrl'] ?? '', // Asegúrate de agregar esto
         );
       }).toList();
     });
@@ -59,24 +61,24 @@ class _HomePageState extends State<HomePage> {
       });
 
       final eventoRef = db.collection('eventos').doc(eventoId);
-      final currentUserId = FirebaseService.getCurrentUserId();
+      final currentUser = FirebaseService.getCurrentUserId();
 
       final eventoDoc = await eventoRef.get();
       final eventData = eventoDoc.data() as Map<String, dynamic>;
 
-      final bool alreadyLiked =
-          (eventData['likes'] as List<dynamic>?)?.contains(currentUserId) ??
-              false;
+      final bool alreadyLiked = (eventData['usuariosLiked'] as List<dynamic>?)
+              ?.contains(currentUser) ??
+          false;
 
       if (alreadyLiked) {
         await eventoRef.update({
           'like': FieldValue.increment(-1),
-          'likes': FieldValue.arrayRemove([currentUserId]),
+          'usuariosLiked': FieldValue.arrayRemove([currentUser]),
         });
       } else {
         await eventoRef.update({
           'like': FieldValue.increment(1),
-          'likes': FieldValue.arrayUnion([currentUserId]),
+          'usuariosLiked': FieldValue.arrayUnion([currentUser]),
         });
       }
     } catch (e) {
@@ -127,7 +129,14 @@ class _HomePageState extends State<HomePage> {
               Text('Gestor de Eventos'),
               ElevatedButton(
                 onPressed: () {
-                  FirebaseService.signInWithGoogle(context);
+                  FirebaseService.signInWithGoogle(context).then((result) {
+                    if (result == "Usuario autenticado") {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => AdminPage()),
+                      );
+                    }
+                  });
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xffFDFFFC),
